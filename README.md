@@ -1,6 +1,6 @@
 # SnailLoad Demo Webserver
 
-This repository contains the source code for the SnailLoad example webserver, as showcased on https://demo.snailload.com
+This repository contains the source code for the SnailLoad example webserver, as showcased on http://demo.snailload.com
 
 # Compile + Install
 
