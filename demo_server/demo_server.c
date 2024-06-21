@@ -21,6 +21,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "error_pixeldata.h"
 #include "snailload_pixeldata.h"
 
 #define LISTEN_BACKLOG          5
@@ -497,30 +498,6 @@ static int send_not_found(int client_sock)
   return send_all(client_sock, body, sizeof(body)-1U);
 }
 
-static int send_unavailable(int client_sock)
-{
-  static const char body[] = "<html><head><title>Temporarily unavailable</title></head><body>The server is currently busy. Please retry in a few minutes.</body></html>";
-
-  char header[MAX_HEADER_LENGTH+1U];
-  const size_t written = snprintf(header, sizeof(header),
-      "HTTP/1.1 503 Service Unavailable\r\n"
-      "Server: SnailLoadPlotgen\r\n"
-      "Cache-Control: no-cache\r\n"
-      "Content-Length: %zu\r\n"
-      "Content-Language: en\r\n"
-      "Connection: close\r\n"
-      "Content-Type: text/html\r\n"
-      "\r\n",
-      sizeof(body)-1U
-  );
-  assert(written < sizeof(header));
-
-  if(send_all(client_sock, header, written) == -1)
-    return -1;
-
-  return send_all(client_sock, body, sizeof(body)-1U);
-}
-
 static int send_index(int client_sock)
 {
   return send_html(client_sock, index_html);
@@ -601,6 +578,60 @@ static void paint_row(uint8_t *row, size_t row_size, uint16_t bit_depth, uint32_
   if(index < 1024)      //paint background, if we still have data for it
     for(; i<1024; ++i)
       set_pixel_color(row, row_size, bit_depth, i, snailload_pixeldata[index * 1024 + i]);
+}
+
+static int send_full(int client_sock)
+{
+  const uint32_t row_size = get_row_size(BITMAP_WIDTH_PIXELS, 4U);
+  uint8_t *row = calloc(row_size, sizeof(uint8_t));
+  if(row == NULL)
+    return -1;
+
+  //send HTTP header
+  static char header[] =
+      "HTTP/1.1 200 OK\r\n"
+      "Server: SnailLoadPlotgen\r\n"
+      "Cache-Control: no-cache\r\n"
+      "Content-Language: en\r\n"
+      "Connection: close\r\n"
+      "Content-Type: image/bmp\r\n"
+      "\r\n";
+  if(send_all(client_sock, header, sizeof(header)-1U) == -1)
+    goto err_free;
+
+  //send BMP header
+  struct bmp_header bmp_header;
+  bmp_header_init(&bmp_header, BITMAP_WIDTH_PIXELS, max_trace_length, 4U, num_colors);
+  if(send_all(client_sock, &bmp_header, sizeof(bmp_header)) == -1)
+    goto err_free;
+
+  //send color table
+  if(send_all(client_sock, color_table, sizeof(color_table)) == -1)
+    goto err_free;
+
+  //send error image, line by line
+  for(size_t i=0U; i<max_trace_length; ++i)
+  {
+    memset(row, 0, row_size);
+    for(uint32_t j=0U; j<BITMAP_WIDTH_PIXELS; ++j)
+      set_pixel_color(row, row_size, 4U, j, error_pixeldata[i * 1024U + j]);
+
+    const ssize_t bytes_sent = send(client_sock, row, row_size, 0);
+    if(bytes_sent == -1)
+    {
+      if(errno != EPIPE && errno != ECONNRESET && errno != ETIMEDOUT)     //error
+        goto err_free;
+
+      break;                                                              //client has closed the connection or sneaked away -> not an actual error
+    }
+  }
+
+  free(row);
+  return 0;
+
+err_free:
+  free(row);
+  return -1;
 }
 
 static int send_trace(int client_sock, const char *client_addr)
@@ -721,7 +752,7 @@ static int handle_connection(int client_sock, const struct in_addr *client_addr,
     if(entry == NULL)
     {
       fprintf(stderr, "Rejecting %s due to connection limit\n", client_addr_str);
-      return send_unavailable(client_sock);
+      return send_full(client_sock);
     }
 
     const int status = send_trace(client_sock, client_addr_str);
