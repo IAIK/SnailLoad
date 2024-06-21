@@ -11,4 +11,4 @@ clean:
 	rm -f $(TARGETS) *.o
 
 demo_server: demo_server.o
-demo_server.o: demo_server.c snailload.h
+demo_server.o: demo_server.c snailload_pixeldata.h

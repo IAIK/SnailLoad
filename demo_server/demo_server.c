@@ -21,7 +21,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "snailload.h"
+#include "snailload_pixeldata.h"
 
 #define LISTEN_BACKLOG          5
 #define MAX_FRAME_LENGTH        (1U << 20U)
@@ -600,7 +600,7 @@ static void paint_row(uint8_t *row, size_t row_size, uint16_t bit_depth, uint32_
     set_pixel_color(row, row_size, bit_depth, i, 3U);
   if(index < 1024)      //paint background, if we still have data for it
     for(; i<1024; ++i)
-      set_pixel_color(row, row_size, bit_depth, i, header_data[index * 1024 + i]);
+      set_pixel_color(row, row_size, bit_depth, i, snailload_pixeldata[index * 1024 + i]);
 }
 
 static int send_trace(int client_sock, const char *client_addr)

@@ -1,6 +1,7 @@
-#pragma once 
+#ifndef SNAILLOAD_PIXELDATA_H
+#define SNAILLOAD_PIXELDATA_H
 
-static unsigned char header_data[] = {
+static unsigned char snailload_pixeldata[] = {
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -65537,4 +65538,6 @@ static unsigned char header_data[] = {
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-	};
+};
+
+#endif
