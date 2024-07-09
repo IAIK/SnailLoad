@@ -917,9 +917,9 @@ int main(int argc, char **argv)
 
   try_load_index_html();
 
-  printf("Will generate traces for at most %f seconds.\n", (double)max_trace_length * ((double)timeslice_nsecs / 1.0e9));
-  printf("Trace image size will be %" PRIu32 " bytes.\n", get_bmp_size(BITMAP_WIDTH_PIXELS, max_trace_length, 4U, num_colors));
-  printf("Each row will have %" PRIu32 " bytes.\n", get_row_size(BITMAP_WIDTH_PIXELS, 4U));
+  fprintf(stderr, "Will generate traces for at most %f seconds.\n", (double)max_trace_length * ((double)timeslice_nsecs / 1.0e9));
+  fprintf(stderr, "Trace image size will be %" PRIu32 " bytes.\n", get_bmp_size(BITMAP_WIDTH_PIXELS, max_trace_length, 4U, num_colors));
+  fprintf(stderr, "Each row will have %" PRIu32 " bytes.\n", get_row_size(BITMAP_WIDTH_PIXELS, 4U));
 
   return handle_connections(passive_socket) == -1 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
