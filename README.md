@@ -1,6 +1,11 @@
 # SnailLoad Demo Webserver
 
-This repository contains the source code for the SnailLoad example webserver, as showcased on http://demo.snailload.com
+This repository contains the source code for the [SnailLoad](https://www.snailload.com) example webserver, as showcased on http://demo.snailload.com
+
+The webserver demonstrates that TCP round trip times carry side-channel information about the current network activity on a victim's internet connection.
+The code shows how a Linux server process obtains network latency traces from a TCP connection initiated by the victim.
+The demo webserver slowly generates a BMP file from the measured latencies on the fly and progressively sends it to the victim.
+This demonstrates the most central claim of the SnailLoad paper: The network latency side channel can be observed from arbitrary TCP connections.
 
 # Compile + Install
 
